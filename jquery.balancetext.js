@@ -266,27 +266,36 @@
         return (h / spaceRatio);
     };
 
-    // Selectors to watch; calling balanceText() on a new selector adds it to this list.
-    var balancedElements = ['.balance-text'];
+    // Selectors and elements to watch;
+    // calling $.balanceText(elements) adds "elements" to this list.
+    var keepUpdated = {
+        sel: ['.balance-text'], // default class to watch
+        $el: $()
+    };
 
-    // Call the balanceText plugin on the elements with "balance-text" class. When a browser
-    // has native support for the text-wrap property, the text balanceText plugin will let
-    // the browser handle it natively, otherwise it will apply its own text balancing code.
+    // Call the balanceText plugin on elements that it's watching.
     var applyBalanceText = function () {
-        var selector = balancedElements.join(',');
-        $(selector).balanceText(true);
+        keepUpdated.$el
+            .add(keepUpdated.sel.join(','))
+            .balanceText();
     };
 
     $.fn.balanceTextUpdate = applyBalanceText;
 
-    $.fn.balanceText = function (skipResize) {
-        var selector = this.selector;
-
-        if (!skipResize && balancedElements.indexOf(selector) === -1) {
-            // record the selector so we can re-balance it on resize
-            balancedElements.push(selector);
+    // Watch elements or a selector for the next updates
+    $.balanceText = function (elements) {
+        if (typeof elements === 'string') {
+            keepUpdated.sel.push(elements);
+        } else {
+            keepUpdated.$el = keepUpdated.$el.add(elements);
         }
+        $(elements).balanceText();
+    };
 
+    // When a browser has native support for the text-wrap property,
+    // the text balanceText plugin will let the browser handle it natively,
+    // otherwise it will apply its own text balancing code.
+    $.fn.balanceText = function () {
         if (hasTextWrap) {
             // browser supports text-wrap, so do nothing
             return this;
